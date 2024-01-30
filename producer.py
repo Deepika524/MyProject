@@ -9,15 +9,18 @@ from kafka import KafkaProducer
 from json import dumps
 
 from dotenv import load_dotenv
+
 load_dotenv('.env')
 
-producer = KafkaProducer(value_serializer=lambda K:dumps(K).encode('utf-8'))
+bootstrap_servers=['localhost:9092']
 
-key = os.getenv('API_KEY','bootstrap_servers')
+producer = KafkaProducer(bootstrap_servers=bootstrap_servers,value_serializer=lambda K:dumps(K).encode('utf-8'))
+
+demo = os.getenv('API_KEY')
 
 #replace the "demo" apikey below with your own key from https://www.alphavantage.co/suppines SV_URL = 'https://www.alphavantage.co/query?function=TIME SERIES INTRADAY EXTENDED&G)
 
-CSV_URL="https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDES&symbol=IBM&interval=15min&slice=year1month1&apikey=key"
+CSV_URL="https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDES&symbol=IBM&interval=5min&slice=year1month1&apikey={}".format(demo)
 with requests. Session() as s:
 
     download = s.get(CSV_URL)
@@ -30,4 +33,4 @@ with requests. Session() as s:
 
     for row in my_list:
 
-        producer.send('python-kafka-stock-txt',row)
+        producer.send('text',row)
