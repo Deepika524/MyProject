@@ -20,7 +20,7 @@ producer=KafkaProducer(bootstrap_servers=KAFKA_SERVER,value_serializer=lambda K:
 key = os.getenv('API_KEY')
 
 
-CSV_URL="https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol=IBM&interval=1min&slice=year1month1&apikey={}".format(key)
+CSV_URL="https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=1min&apikey=2OWSX3KJQKVEWV6D&datatype=csv"
 with requests. Session() as s:
 
     download = s.get(CSV_URL)
