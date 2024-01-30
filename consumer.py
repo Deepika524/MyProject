@@ -1,28 +1,13 @@
-from kafka import KafkaConsumer
+from kafka import kafkaConsumer
+from pydoop import hdfs
 
-import sys
 
-import json
+TOPIC_NAME='StockData'
 
-import os
-
-from kafka.consumer import group
-
-from dotenv import load_dotenv
-
-load_dotenv('.env')
-
-key = os.getenv('bootstrap_servers')
-
-consumer = KafkaConsumer('python-kafka-stock-txt',auto_offset_reset = 'earliest',group_id = None)
-#creating another file to store the data
-
-sys.stdout-open('/home/lenovo/Desktop/Python_work/hadoop/KAFKA/stockdata/stockdataconsole.txt','w')
+consumer=KafkaConsumer(TOPIC_NAME)
+hdfs_path="hdfs://localhost:9000//LiveStockData/data.txt"
 
 for message in consumer:
-
-    values = message.value
-
-    print(values)
-
-sys.stdout.close()
+    values=message.value
+    with hdfs.open(hdfs_path,'a') as wfile:
+        wfile.write(values)
