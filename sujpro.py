@@ -33,12 +33,12 @@ def get_tweets():
             tweet_data['text'] = tweet_data.get('text', '').replace("'", "").replace("\"", "").replace("\n", "")
             producer.send(topic_name, str.encode(json.dumps(tweet_data)))
     except tweepy.TweepError as e:
-        print(f"Error fetching tweets: {e}")
+        print("Error fetching tweets: {}".format(e))
 
 def stream(interval):
     while True:
         get_tweets()
-        print(f'Streaming Tweets at {datetime.datetime.now()}')
+        print('Streaming Tweets at {}'.format(datetime.datetime.now()))
         time.sleep(interval)
 
 if __name__ == "__main__":
