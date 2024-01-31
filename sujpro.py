@@ -29,8 +29,8 @@ producer = KafkaProducer(
 def get_tweets():
     try:
         for tweet in tweepy.Cursor(api.search, q='kafka').items():
-            tweet_data = {k: tweet._json[k] for k in important_fields}
-            tweet_data['text'] = tweet_data['text'].replace("'", "").replace("\"", "").replace("\n", "")
+            tweet_data = {k: tweet._json[k] for k in tweet._json if k in important_fields}
+            tweet_data['text'] = tweet_data.get('text', '').replace("'", "").replace("\"", "").replace("\n", "")
             producer.send(topic_name, str.encode(json.dumps(tweet_data)))
     except tweepy.TweepError as e:
         print(f"Error fetching tweets: {e}")
@@ -41,5 +41,8 @@ def stream(interval):
         print(f'Streaming Tweets at {datetime.datetime.now()}')
         time.sleep(interval)
 
-if _name_ == "_main_":
-    stream(10)
+if __name__ == "__main__":
+    try:
+        stream(10)
+    finally:
+        producer.close()
