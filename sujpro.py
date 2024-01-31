@@ -1,6 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
-
+#
 # Kafka configuration
 kafka_bootstrap_servers = 'localhost:9092'
 kafka_topic = 'sony'
