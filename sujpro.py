@@ -1,50 +1,45 @@
-from pyspark.sql import SparkSession
-from pyspark.sql.types import StructType, StructField, StringType
-#
-# Kafka configuration
-kafka_bootstrap_servers = 'localhost:9092'
-kafka_topic = 'sony'
+import datetime
+import json
+import time
+import tweepy
+from kafka import KafkaProducer
 
-# CSV file path
-csv_file_path = '/home/ubh01/apple_quality.csv'
+# Twitter API credentials
+consumer_key = 'BvBVJh3PzQ0ix59jDfIndyoKm'
+consumer_secret = 'td1mVfV8g5cz5rTdCrmwVquPTfPSdb8kxwmIsI5AwB0DhyPLaY'
+access_token = '1751509450287161344-VbQhp8nkH4eKePAEZRz7spBshYYFLC'
+access_token_secret = 'lIkIG2qkYPyHLwuo2eUuYOJH3QKR3KQNIWG9zZxLnvLYp'
 
-# Define the schema for the CSV file
-schema = StructType([
-    StructField("_c0", StringType(), True),
-    StructField("_c1", StringType(), True),
-    # Add more fields as per your CSV file structure
-])
+# Kafka broker settings
+kafka_brokers = "localhost:9092"
+topic_name = 'topic_man1'
+important_fields = ['created_at', 'id', 'id_str', 'text', 'retweet_count', 'favorite_count', 'favorited', 'retweeted', 'lang']
 
-# Create a Spark session
-spark = SparkSession.builder.appName("StructuredStreamingKafkaIntegration").getOrCreate()
+# Create Twitter API object
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth, wait_on_rate_limit=True, wait_on_rate_limit_notify=True)
 
-# Read CSV file in a streaming fashion with specified schema
-csv_stream_df = (
-    spark
-    .readStream
-    .schema(schema)
-    .csv(csv_file_path, header=True)
-    .selectExpr("CAST(_c0 AS STRING) as key", "CAST(_c1 AS STRING) as value")
+# Create Kafka producer
+producer = KafkaProducer(
+    bootstrap_servers=kafka_brokers,
+    api_version=(0, 10, 1)
 )
 
-# Define a function to send messages to Kafka
-def send_to_kafka(df, epoch_id):
-    kafka_df = df.limit(1)  # Limit to one row per micro-batch
-    kafka_df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)") \
-            .write \
-            .format("kafka") \
-            .option("kafka.bootstrap.servers", kafka_bootstrap_servers) \
-            .option("topic", kafka_topic) \
-            .save()
+def get_tweets():
+    try:
+        for tweet in tweepy.Cursor(api.search, q='kafka').items():
+            tweet_data = {k: tweet._json[k] for k in important_fields}
+            tweet_data['text'] = tweet_data['text'].replace("'", "").replace("\"", "").replace("\n", "")
+            producer.send(topic_name, str.encode(json.dumps(tweet_data)))
+    except tweepy.TweepError as e:
+        print(f"Error fetching tweets: {e}")
 
-# Start the streaming query
-streaming_query = (
-    csv_stream_df
-    .writeStream
-    .foreachBatch(send_to_kafka)
-    .trigger(processingTime="5 seconds")  # Trigger every 5 seconds
-    .start()
-)
+def stream(interval):
+    while True:
+        get_tweets()
+        print(f'Streaming Tweets at {datetime.datetime.now()}')
+        time.sleep(interval)
 
-# Await termination of the streaming query
-streaming_query.awaitTermination()
+if _name_ == "_main_":
+    stream(10)
