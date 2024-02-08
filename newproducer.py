@@ -8,7 +8,8 @@ KAFKA_SERVER = ['localhost:9092']
 producer = KafkaProducer(bootstrap_servers=KAFKA_SERVER, value_serializer=lambda K: dumps(K).encode('utf-8'))
 
 API_KEY = "2OWSX3KJQKVEWV6D"
-CSV_URL = "https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=1min&apikey=2OWSX3KJQKVEWV6D&datatype=csv"
+CSV_URL = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol=IBM&interval=1min&slice=year1month1&apikey={API_KEY}"
+
 with requests.Session() as s:
     download = s.get(CSV_URL)
     decoded_content = download.content.decode('utf-8')
@@ -23,4 +24,3 @@ with requests.Session() as s:
         print(data_dict)  # For testing, print each dictionary
 
 producer.close()  # Close the producer after sending data
-
